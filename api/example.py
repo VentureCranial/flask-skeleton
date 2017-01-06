@@ -22,10 +22,18 @@ class ExampleResource(object):
         self.session = session
         self.logger = logger
 
-    def on_get(self, req, resp, example_id):
+    def on_get(self, req, resp, example_id_in):
 
         example_schema = ExampleSchema()
 
+        try:
+            example_id = int(example_id_in)
+        except ValueError:
+            self.logger.error('Invalid example_id provided.')
+            raise falcon.HTTPBadRequest(
+                'Bad Request',
+                'Valid ID must be provided as example/id.')
+ 
         try:
             if example_id:
                 example = self.session.query(Example).filter(Example.id == example_id).first()
@@ -151,5 +159,5 @@ session = sa.orm.Session(engine)
 Example.metadata.create_all(engine)
 
 examples = ExampleResource(session, logger)
-app.add_route('/{example_id}', examples)
+app.add_route('/{example_id_in}', examples)
 logger.info('Endpoint is READY to process requests.')
